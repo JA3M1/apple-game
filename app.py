@@ -5,7 +5,7 @@ import streamlit as st
 # 페이지 설정
 st.set_page_config(page_title="16x16 사과 게임", page_icon="🍏", layout="wide")
 
-# 버튼의 네모 박스(테두리/배경)를 완전히 투명하게 만드는 커스텀 CSS
+# 초록색 테마 및 버튼 스타일링 (테두리 제거 + 상하 정렬을 위한 pre-line 설정)
 st.markdown(
     """
     <style>
@@ -16,18 +16,21 @@ st.markdown(
         color: #1b5e20 !important;
     }
     
-    /* 버튼의 테두리, 배경을 완전히 없애서 사과와 숫자만 보이게 함 */
+    /* 버튼의 테두리, 배경 제거 및 텍스트 상하 정렬 (줄바꿈 허용) */
     div.stButton > button {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 16px !important;
-        padding: 0px !important;
+        font-size: 15px !important;
+        font-weight: bold !important;
+        padding: 2px 0px !important;
         margin: 0px !important;
-        min-height: 0px !important;
+        line-height: 1.1 !important;
+        white-space: pre-line !important;
+        height: auto !important;
     }
     
-    /* 버튼 호버(마우스 올렸을 때) 효과도 제거하거나 부드럽게 */
+    /* 마우스 호버 시 은은한 효과 */
     div.stButton > button:hover {
         background-color: rgba(0, 0, 0, 0.05) !important;
         border: none !important;
@@ -99,7 +102,9 @@ st.title("🍏 16x16 초록빛 사과 게임")
 if st.session_state.game_state == "ready":
     st.markdown("### 🌲 게임 규칙")
     st.write("1. **Start** 버튼을 누르면 사과 밭이 펼쳐집니다.")
-    st.write("2. 네모 박스가 없는 **사과와 숫자**를 눌러 합이 10이 되도록 만드세요.")
+    st.write(
+        "2. **숫자가 위에 있고 사과가 아래에 있는 형태**를 눌러 합이 10이 되도록 만드세요."
+    )
     st.write("3. **[선택 완료]**를 누르면 사과와 숫자가 함께 사라집니다.")
 
     if st.button("🚀 Start 게임 시작", use_container_width=True):
@@ -137,7 +142,7 @@ elif st.session_state.game_state == "playing":
 
     st.write("")
 
-    # 16x16 보드 출력 (테두리 없는 투명 버튼 적용)
+    # 16x16 보드 출력 (숫자 위, 사과 아래 형태)
     for r in range(16):
         cols = st.columns(16)
         for c in range(16):
@@ -145,12 +150,13 @@ elif st.session_state.game_state == "playing":
             is_selected = (r, c) in st.session_state.selected_coords
 
             if val == 0:
-                cols[c].markdown("⠀")  # 빈 공간
+                cols[c].markdown("⠀")
             else:
-                # 사과 아이콘 위에 숫자가 얹어진 형태 (선택 시 이모지 변경으로 표시)
-                label = f"🍎{val}"
+                # 숫자가 위에 오고 사과 아이콘이 아래에 오도록 줄바꿈 설정 (\n 사용)
                 if is_selected:
-                    label = f"🟩{val}"  # 선택된 경우 초록 상자로 표시
+                    label = f"{val}\n🟩"  # 선택된 경우 초록 상자/이모지로 표시
+                else:
+                    label = f"{val}\n🍎"  # 평소에는 숫자 위, 사과 아래
 
                 if cols[c].button(label, key=f"btn_{r}_{c}"):
                     if (r, c) not in st.session_state.selected_coords:
