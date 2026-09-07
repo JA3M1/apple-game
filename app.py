@@ -100,7 +100,7 @@ def start_game():
     st.session_state.start_time = time.time()
 
 
-# 1. 시작 화면 (Ready)
+# 1. 시작 화면 (Ready 상태일 때만 온전히 표시)
 if st.session_state.game_state == "ready":
     st.markdown("<div style='height: 120px;'></div>", unsafe_allow_html=True)
     st.markdown(
@@ -120,7 +120,7 @@ if st.session_state.game_state == "ready":
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-# 2. 플레이 화면 (Playing) 또는 결과 오버레이 팝업
+# 2. 플레이 화면 (Playing 또는 Game Over 상태)
 else:
     # 시간 검사 및 게임 종료 상태 전환
     elapsed_time = time.time() - st.session_state.start_time
@@ -202,7 +202,7 @@ else:
                         st.session_state.first_click = None
                     st.rerun()
 
-    # 시간이 다 되어 게임이 끝났을 경우, 페이지 전환 없이 사과 게임 판 위에 결과 창(팝업) 띄우기
+    # 시간이 다 되어 게임이 끝났을 경우에만 결과 창(팝업) 띄우기
     if st.session_state.game_state == "game_over":
         st.balloons()
         with st.container():
@@ -232,7 +232,7 @@ else:
                 unsafe_allow_html=True,
             )
 
-            # 팝업 내 재시작 버튼 배치용 여백 및 버튼
+            # 팝업 내 재시작 버튼 배치
             st.markdown(
                 "<div style='position: fixed; top: 52%; left: 50%; transform: translate(-50%, -52%); z-index: 10000; width: 300px;'>",
                 unsafe_allow_html=True,
