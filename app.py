@@ -5,7 +5,7 @@ import streamlit as st
 # 페이지 설정
 st.set_page_config(page_title="16x16 사과 게임", page_icon="🍏", layout="wide")
 
-# 초록색 테마 및 사과 버튼 스타일링을 위한 커스텀 CSS 적용
+# 버튼의 네모 박스(테두리/배경)를 완전히 투명하게 만드는 커스텀 CSS
 st.markdown(
     """
     <style>
@@ -15,11 +15,22 @@ st.markdown(
     h1, h2, h3, p, label {
         color: #1b5e20 !important;
     }
-    /* 버튼 내부 글씨와 이모지 크기 조절 */
+    
+    /* 버튼의 테두리, 배경을 완전히 없애서 사과와 숫자만 보이게 함 */
     div.stButton > button {
-        font-size: 14px !important;
-        padding: 4px 0px !important;
-        border-radius: 6px !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 16px !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        min-height: 0px !important;
+    }
+    
+    /* 버튼 호버(마우스 올렸을 때) 효과도 제거하거나 부드럽게 */
+    div.stButton > button:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+        border: none !important;
     }
     </style>
 """,
@@ -28,7 +39,7 @@ st.markdown(
 
 # 세션 상태 초기화
 if "game_state" not in st.session_state:
-    st.session_state.game_state = "ready"  # 'ready', 'playing', 'game_over'
+    st.session_state.game_state = "ready"
 if "score" not in st.session_state:
     st.session_state.score = 0
 if "cleared_apples" not in st.session_state:
@@ -46,7 +57,6 @@ if "game_duration" not in st.session_state:
 
 
 def init_board():
-    """16x16 크기의 사과(숫자 1~9) 보드를 생성합니다."""
     st.session_state.board = [
         [random.randint(1, 9) for _ in range(16)] for _ in range(16)
     ]
@@ -63,13 +73,11 @@ def start_game():
 
 
 def check_and_clear():
-    """선택된 사과들의 합이 10인지 확인하고 제거합니다."""
     if sum(st.session_state.selected) == 10:
         count = len(st.session_state.selected)
         st.session_state.score += count * 100
         st.session_state.cleared_apples += count
 
-        # 보드에서 선택된 위치를 완전한 빈 칸(0)으로 변경
         for r, c in st.session_state.selected_coords:
             st.session_state.board[r][c] = 0
 
@@ -87,21 +95,18 @@ def check_and_clear():
 # --- UI 레이아웃 ---
 st.title("🍏 16x16 초록빛 사과 게임")
 
-# 1. 시작 화면 (Ready)
+# 1. 시작 화면
 if st.session_state.game_state == "ready":
     st.markdown("### 🌲 게임 규칙")
-    st.write("1. **Start** 버튼을 누르면 16x16 사과 밭이 펼쳐집니다.")
-    st.write(
-        "2. 사과 아이콘 위에 적힌 **숫자의 합이 10**이 되도록 여러 개 클릭해 선택하세요."
-    )
-    st.write("3. **[선택 완료]**를 누르면 합이 10일 때 사과와 숫자가 함께 사라집니다.")
-    st.write("4. 제한 시간(60초) 동안 최대한 많은 사과를 수확하세요!")
+    st.write("1. **Start** 버튼을 누르면 사과 밭이 펼쳐집니다.")
+    st.write("2. 네모 박스가 없는 **사과와 숫자**를 눌러 합이 10이 되도록 만드세요.")
+    st.write("3. **[선택 완료]**를 누르면 사과와 숫자가 함께 사라집니다.")
 
     if st.button("🚀 Start 게임 시작", use_container_width=True):
         start_game()
         st.rerun()
 
-# 2. 플레이 화면 (Playing)
+# 2. 플레이 화면
 elif st.session_state.game_state == "playing":
     elapsed_time = time.time() - st.session_state.start_time
     remaining_time = max(0, int(st.session_state.game_duration - elapsed_time))
@@ -110,7 +115,6 @@ elif st.session_state.game_state == "playing":
         st.session_state.game_state = "game_over"
         st.rerun()
 
-    # 상단 정보 표시
     col1, col2, col3 = st.columns(3)
     col1.metric("⏱️ 남은 시간", f"{remaining_time}초")
     col2.metric("🏆 현재 점수", f"{st.session_state.score}점")
@@ -118,7 +122,6 @@ elif st.session_state.game_state == "playing":
 
     st.write("---")
 
-    # 액션 버튼
     col_a, col_b = st.columns(2)
     if col_a.button("✨ 선택 완료 (합산 확인)", use_container_width=True):
         if st.session_state.selected:
@@ -134,7 +137,7 @@ elif st.session_state.game_state == "playing":
 
     st.write("")
 
-    # 16x16 보드 그리기 (사과 이모지 위에 숫자 결합)
+    # 16x16 보드 출력 (테두리 없는 투명 버튼 적용)
     for r in range(16):
         cols = st.columns(16)
         for c in range(16):
@@ -142,17 +145,14 @@ elif st.session_state.game_state == "playing":
             is_selected = (r, c) in st.session_state.selected_coords
 
             if val == 0:
-                # 이미 제거된 자리: 투명하거나 빈 공간처럼 처리
-                cols[c].button(
-                    "⠀", key=f"btn_{r}_{c}", disabled=True, use_container_width=True
-                )
+                cols[c].markdown("⠀")  # 빈 공간
             else:
-                # 사과 아이콘 위에 숫자가 함께 오도록 라벨 구성 (선택 시 구분을 위해 테두리 느낌 추가)
+                # 사과 아이콘 위에 숫자가 얹어진 형태 (선택 시 이모지 변경으로 표시)
                 label = f"🍎{val}"
                 if is_selected:
-                    label = f"🟩{val}"  # 선택된 사과는 초록 배경 느낌으로 표시
+                    label = f"🟩{val}"  # 선택된 경우 초록 상자로 표시
 
-                if cols[c].button(label, key=f"btn_{r}_{c}", use_container_width=True):
+                if cols[c].button(label, key=f"btn_{r}_{c}"):
                     if (r, c) not in st.session_state.selected_coords:
                         st.session_state.selected_coords.append((r, c))
                         st.session_state.selected.append(val)
@@ -161,11 +161,11 @@ elif st.session_state.game_state == "playing":
     time.sleep(1)
     st.rerun()
 
-# 3. 결과 화면 (Game Over)
+# 3. 결과 화면
 elif st.session_state.game_state == "game_over":
     st.balloons()
     st.markdown("## 🌿 게임 종료!")
-    st.write("수고하셨습니다! 사과 수확 결과입니다.")
+    st.write("수고하셨습니다! 수확 결과입니다.")
 
     st.info(
         f"""
