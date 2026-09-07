@@ -3,7 +3,22 @@ import time
 import streamlit as st
 
 # 페이지 설정
-st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="centered")
+st.set_page_config(page_title="16x16 사과 게임", page_icon="🍏", layout="wide")
+
+# 초록색 테마를 위한 커스텀 CSS 적용
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #e8f5e9;
+    }
+    h1, h2, h3, p, label {
+        color: #1b5e20 !important;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
 
 # 세션 상태 초기화
 if "game_state" not in st.session_state:
@@ -16,18 +31,23 @@ if "board" not in st.session_state:
     st.session_state.board = []
 if "selected" not in st.session_state:
     st.session_state.selected = []
+if "selected_coords" not in st.session_state:
+    st.session_state.selected_coords = []
 if "start_time" not in st.session_state:
     st.session_state.start_time = 0
 if "game_duration" not in st.session_state:
-    st.session_state.game_duration = 30  # 게임 시간 (초)
+    st.session_state.game_duration = 60  # 16x16이므로 제한 시간을 60초로 넉넉하게 설정
 
 
 def init_board():
-    """5x5 크기의 사과(숫자 1~9) 보드를 생성합니다."""
-    st.session_state.board = [[random.randint(1, 9) for _ in range(5)] for _ in range(5)]
+    """16x16 크기의 사과(숫자 1~9) 보드를 생성합니다."""
+    st.session_state.board = [
+        [random.randint(1, 9) for _ in range(16)] for _ in range(16)
+    ]
     st.session_state.score = 0
     st.session_state.cleared_apples = 0
     st.session_state.selected = []
+    st.session_state.selected_coords = []
 
 
 def start_game():
@@ -40,7 +60,7 @@ def check_and_clear():
     """선택된 사과들의 합이 10인지 확인하고 제거합니다."""
     if sum(st.session_state.selected) == 10:
         count = len(st.session_state.selected)
-        st.session_state.score += count * 100  # 맞춘 개수당 100점
+        st.session_state.score += count * 100
         st.session_state.cleared_apples += count
 
         # 보드에서 선택된 위치를 빈 칸(0)으로 변경
@@ -49,22 +69,25 @@ def check_and_clear():
 
         st.session_state.selected = []
         st.session_state.selected_coords = []
-        st.success("10을 만들었습니다! 🍎 사라짐!")
+        st.success("🎉 합이 10입니다! 사과가 제거되었습니다.")
     else:
-        st.error("합이 10이 아닙니다! 다시 선택해주세요.")
+        st.error(
+            f"❌ 선택한 숫자의 합이 {sum(st.session_state.selected)}입니다. (10이 되어야 합니다)"
+        )
         st.session_state.selected = []
         st.session_state.selected_coords = []
 
 
 # --- UI 레이아웃 ---
-st.title("🍎 스트림릿 사과 게임 (숫자 합이 10!)")
+st.title("🍏 16x16 초록빛 사과 게임")
 
 # 1. 시작 화면 (Ready)
 if st.session_state.game_state == "ready":
-    st.markdown("### 게임 규칙")
-    st.write("1. **Start** 버튼을 누르면 게임이 시작됩니다.")
-    st.write("2. 5x5 격자에서 **합이 10이 되는 사과(숫자들)**를 클릭하여 선택하세요.")
-    st.write("3. 제한 시간 내에 최대한 많은 사과를 없애고 높은 점수를 얻으세요!")
+    st.markdown("### 🌲 게임 규칙")
+    st.write("1. **Start** 버튼을 누르면 16x16 초록색 사과밭이 펼쳐집니다.")
+    st.write("2. 격자판에서 **합이 10이 되는 숫자들**을 여러 개 클릭하여 선택하세요.")
+    st.write("3. **[선택 완료]**를 눌러 합이 10인지 확인하고 사과를 없애세요.")
+    st.write("4. 제한 시간(60초) 동안 최대한 많은 사과를 없애 고득점을 달성하세요!")
 
     if st.button("🚀 Start 게임 시작", use_container_width=True):
         start_game()
@@ -72,11 +95,9 @@ if st.session_state.game_state == "ready":
 
 # 2. 플레이 화면 (Playing)
 elif st.session_state.game_state == "playing":
-    # 타이머 및 제한 시간 계산
     elapsed_time = time.time() - st.session_state.start_time
     remaining_time = max(0, int(st.session_state.game_duration - elapsed_time))
 
-    # 시간이 다 되면 게임 종료
     if remaining_time == 0:
         st.session_state.game_state = "game_over"
         st.rerun()
@@ -85,34 +106,11 @@ elif st.session_state.game_state == "playing":
     col1, col2, col3 = st.columns(3)
     col1.metric("⏱️ 남은 시간", f"{remaining_time}초")
     col2.metric("🏆 현재 점수", f"{st.session_state.score}점")
-    col3.metric("🍎 없앤 사과", f"{st.session_state.cleared_apples}개")
+    col3.metric("🍏 없앤 사과", f"{st.session_state.cleared_apples}개")
 
     st.write("---")
-    st.write("합이 **10**이 되도록 사과를 여러 개 선택한 뒤 **[제거하기]** 버튼을 누르세요.")
 
-    if "selected_coords" not in st.session_state:
-        st.session_state.selected_coords = []
-
-    # 5x5 보드 그리기
-    for r in range(5):
-        cols = st.columns(5)
-        for c in range(5):
-            val = st.session_state.board[r][c]
-            is_selected = (r, c) in st.session_state.selected_coords
-
-            if val == 0:
-                cols[c].button(
-                    "❌", key=f"btn_{r}_{c}", disabled=True, use_container_width=True
-                )
-            else:
-                label = f"🍏 [{val}]" if is_selected else f"🍎 {val}"
-                if cols[c].button(label, key=f"btn_{r}_{c}", use_container_width=True):
-                    if (r, c) not in st.session_state.selected_coords:
-                        st.session_state.selected_coords.append((r, c))
-                        st.session_state.selected.append(val)
-                    st.rerun()
-
-    # 액션 버튼
+    # 액션 버튼 (상단 배치로 접근성 향상)
     col_a, col_b = st.columns(2)
     if col_a.button("✨ 선택 완료 (합산 확인)", use_container_width=True):
         if st.session_state.selected:
@@ -126,20 +124,40 @@ elif st.session_state.game_state == "playing":
         st.session_state.selected_coords = []
         st.rerun()
 
-    # 타이머 자동 갱신을 위한 지연 (1초마다 리프레시)
+    st.write("")
+
+    # 16x16 보드 그리기
+    for r in range(16):
+        cols = st.columns(16)
+        for c in range(16):
+            val = st.session_state.board[r][c]
+            is_selected = (r, c) in st.session_state.selected_coords
+
+            if val == 0:
+                cols[c].button(
+                    "🍃", key=f"btn_{r}_{c}", disabled=True, use_container_width=True
+                )
+            else:
+                label = f"[{val}]" if is_selected else f"{val}"
+                if cols[c].button(label, key=f"btn_{r}_{c}", use_container_width=True):
+                    if (r, c) not in st.session_state.selected_coords:
+                        st.session_state.selected_coords.append((r, c))
+                        st.session_state.selected.append(val)
+                    st.rerun()
+
     time.sleep(1)
     st.rerun()
 
 # 3. 결과 화면 (Game Over)
 elif st.session_state.game_state == "game_over":
     st.balloons()
-    st.markdown("## 🎮 게임 종료!")
-    st.write("수고하셨습니다! 최종 결과는 다음과 같습니다.")
+    st.markdown("## 🌿 게임 종료!")
+    st.write("수고하셨습니다! 16x16 사과밭의 최종 결과입니다.")
 
     st.info(
         f"""
     - **최종 점수:** {st.session_state.score} 점
-    - **합친(제거한) 사과 개수:** {st.session_state.cleared_apples} 개
+    - **제거한 사과 개수:** {st.session_state.cleared_apples} 개
     """
     )
 
