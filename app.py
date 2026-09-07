@@ -5,7 +5,7 @@ import streamlit as st
 # 페이지 설정 (wide 모드)
 st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="wide")
 
-# 흰색 네모 배경을 완전히 없애고 사과 아이콘 위에 검은색 숫자가 딱 겹쳐 보이도록 하는 CSS
+# 사과 아이콘 중앙에 숫자가 오도록 겹치는 CSS 스타일링
 st.markdown(
     """
     <style>
@@ -29,21 +29,21 @@ st.markdown(
         margin: 0px !important;
     }
 
-    /* 버튼의 흰색 네모 배경과 테두리를 완전히 투명하게 제거 */
+    /* 버튼 배경을 사과 이모지로 채우고, 숫자를 중앙에 겹치게 배치 */
     div.stButton > button {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: bold !important;
-        color: #000000 !important; /* 숫자를 검정색으로 설정 */
+        color: #000000 !important;
         padding: 0px !important;
         height: 32px !important;
         min-height: 32px !important;
         width: 100% !important;
+        position: relative;
     }
     
-    /* 마우스 올렸을 때 은은한 효과 */
     div.stButton > button:hover {
         background-color: rgba(255, 255, 255, 0.2) !important;
         border: none !important;
@@ -62,8 +62,8 @@ if "cleared_apples" not in st.session_state:
     st.session_state.cleared_apples = 0
 if "board" not in st.session_state:
     st.session_state.board = []
-if "selected_coords" not in st.session_state:
-    st.session_state.selected_coords = []
+if "first_click" not in st.session_state:
+    st.session_state.first_click = None  # 영역 지정을 위한 첫 번째 사과 좌표 (r, c)
 if "start_time" not in st.session_state:
     st.session_state.start_time = 0
 if "game_duration" not in st.session_state:
@@ -76,7 +76,7 @@ def init_board():
     ]
     st.session_state.score = 0
     st.session_state.cleared_apples = 0
-    st.session_state.selected_coords = []
+    st.session_state.first_click = None
 
 
 def start_game():
@@ -87,7 +87,7 @@ def start_game():
 
 # --- UI 레이아웃 ---
 st.markdown(
-    "<h3 style='text-align: center;'>🍎 사과 게임 (16 x 16)</h3>",
+    "<h3 style='text-align: center;'>🍎 진짜 사과 게임 (16 x 16)</h3>",
     unsafe_allow_html=True,
 )
 
@@ -97,9 +97,9 @@ if st.session_state.game_state == "ready":
         "<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True
     )
     st.write(
-        "사과 아이콘 자리에 적힌 **검은색 숫자들의 합이 10**이 되도록 클릭하세요."
+        "사과를 **두 개(시작점과 끝점)** 클릭하여 네모 박스 영역을 지정하세요."
     )
-    st.write("합이 10이 되면 사과와 숫자가 함께 사라집니다!")
+    st.write("영역 안의 모든 숫자 합이 **10**이 되면 사과들이 사라집니다!")
 
     if st.button("🚀 Start 게임 시작", use_container_width=True):
         start_game()
@@ -121,50 +121,75 @@ elif st.session_state.game_state == "playing":
     c2.metric("🏆 점수", f"{st.session_state.score}점")
     c3.metric("🍎 사과", f"{st.session_state.cleared_apples}개")
 
-    if c4.button("🔄 선택 초기화", use_container_width=True):
-        st.session_state.selected_coords = []
+    if c4.button("🔄 선택 취소", use_container_width=True):
+        st.session_state.first_click = None
         st.rerun()
 
-    st.write("")
+    if st.session_state.first_click:
+        st.info(
+            f"📍 첫 번째 사과 선택됨 ({st.session_state.first_click[0]+1행, st.session_state.first_click[1]+1열}). 대각선 위치의 두 번째 사과를 클릭하여 영역을 지정하세요."
+        )
+    else:
+        st.write("사과 영역의 시작점을 클릭하세요.")
 
-    # 16x16 보드 출력 (네모 배경 없이 사과 아이콘 자리에 검은색 숫자가 위치)
+    # 16x16 보드 출력
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
             val = st.session_state.board[r][c]
-            is_selected = (r, c) in st.session_state.selected_coords
+
+            # 첫 번째로 클릭한 위치 표시용
+            is_first = st.session_state.first_click == (r, c)
 
             if val == 0:
                 cols[c].markdown(
                     "<div style='height: 32px;'></div>", unsafe_allow_html=True
                 )
             else:
-                # 선택된 경우 초록색 배경/테두리 느낌의 이모지, 아닐 경우 사과 아이콘과 검은색 숫자 결합
-                if is_selected:
-                    btn_label = f"🟩 {val}"
+                # 사과 이모지 배경 위에 숫자가 겹치도록 HTML 조합
+                if is_first:
+                    btn_label = f"🟩{val}"
                 else:
-                    btn_label = f"🍎 {val}"
+                    btn_label = f"🍎{val}"
 
                 if cols[c].button(btn_label, key=f"apple_{r}_{c}"):
-                    if (r, c) in st.session_state.selected_coords:
-                        st.session_state.selected_coords.remove((r, c))
+                    if st.session_state.first_click is None:
+                        # 첫 번째 클릭 지정
+                        st.session_state.first_click = (r, c)
                     else:
-                        st.session_state.selected_coords.append((r, c))
+                        # 두 번째 클릭: 네모 영역 지정 완료
+                        r1, c1 = st.session_state.first_click
+                        r2, c2 = (r, c)
 
-                        # 선택된 사과들의 합 검사
-                        current_sum = sum(
-                            st.session_state.board[coord[0]][coord[1]]
-                            for coord in st.session_state.selected_coords
-                        )
-                        if current_sum == 10:
-                            count = len(st.session_state.selected_coords)
+                        # 사각형 영역 범위 계산 (상하좌우 순서 상관없이 처리)
+                        min_r, max_r = min(r1, r2), max(r1, r2)
+                        min_c, max_c = min(c1, c2), max(c1, c2)
+
+                        # 영역 안의 모든 숫자 합산 및 빈 칸(0) 제외 여부 확인
+                        total_sum = 0
+                        target_coords = []
+                        for row in range(min_r, max_r + 1):
+                            for col in range(min_c, max_c + 1):
+                                current_val = st.session_state.board[row][col]
+                                if current_val > 0:
+                                    total_sum += current_val
+                                    target_coords.append((row, col))
+
+                        # 합이 10인 경우에만 사과 제거
+                        if total_sum == 10:
+                            count = len(target_coords)
                             st.session_state.score += count * 100
                             st.session_state.cleared_apples += count
-                            for cr, cc in st.session_state.selected_coords:
-                                st.session_state.board[cr][cc] = 0
-                            st.session_state.selected_coords = []
-                        elif current_sum > 10:
-                            st.session_state.selected_coords = []
+                            for tr, tc in target_coords:
+                                st.session_state.board[tr][tc] = 0
+                            st.success("🎉 합이 10입니다! 영역 안의 사과가 제거되었습니다.")
+                        else:
+                            st.error(
+                                f"❌ 선택한 영역의 합이 {total_sum}입니다. (10이 되어야 합니다)"
+                            )
+
+                        # 선택 초기화
+                        st.session_state.first_click = None
                     st.rerun()
 
     time.sleep(1)
