@@ -34,7 +34,7 @@ st.markdown(
         color: #000000 !important;
     }
 
-    /* 사과 버튼 스타일 */
+    /* 사과 버튼 스타일 (투명 배경에 큼직한 이모지와 검은색 숫자) */
     div.stButton > button {
         background-color: transparent !important;
         border: none !important;
@@ -83,6 +83,8 @@ if "start_time" not in st.session_state:
     st.session_state.start_time = 0
 if "game_duration" not in st.session_state:
     st.session_state.game_duration = 60
+if "game_id" not in st.session_state:
+    st.session_state.game_id = 0  # 버튼 키 잔상 방지를 위한 고유 ID
 
 
 def init_board():
@@ -92,6 +94,7 @@ def init_board():
     st.session_state.score = 0
     st.session_state.cleared_apples = 0
     st.session_state.first_click = None
+    st.session_state.game_id += 1  # 게임 시작/재시작마다 키를 완전히 새로 갱신
 
 
 def start_game():
@@ -115,7 +118,7 @@ if st.session_state.game_state == "ready":
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-        if st.button("🚀 Start 게임 시작", key="start_btn", use_container_width=True):
+        if st.button("🚀 Start 게임 시작", key="main_start_btn", use_container_width=True):
             start_game()
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -135,7 +138,7 @@ elif st.session_state.game_state == "playing":
     c2.metric("🏆 점수", f"{st.session_state.score}점")
     c3.metric("🍏 사과", f"{st.session_state.cleared_apples}개")
 
-    if c4.button("🔄 선택 취소", key="cancel_btn", use_container_width=True):
+    if c4.button("🔄 선택 취소", key=f"cancel_btn_{st.session_state.game_id}", use_container_width=True):
         st.session_state.first_click = None
         st.rerun()
 
@@ -147,7 +150,7 @@ elif st.session_state.game_state == "playing":
     else:
         st.write("사과 영역의 시작점을 클릭하세요.")
 
-    # 16x16 보드 출력
+    # 16x16 보드 출력 (game_id를 키에 포함하여 이전 세션 버튼 잔상 완벽 차단)
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
@@ -164,7 +167,7 @@ elif st.session_state.game_state == "playing":
                 else:
                     btn_label = f"🍎{val}"
 
-                if cols[c].button(btn_label, key=f"apple_{r}_{c}"):
+                if cols[c].button(btn_label, key=f"apple_{st.session_state.game_id}_{r}_{c}"):
                     if st.session_state.first_click is None:
                         st.session_state.first_click = (r, c)
                     else:
@@ -203,7 +206,6 @@ elif st.session_state.game_state == "playing":
 
 # 3. 게임 종료 상태 (Game Over 팝업)
 elif st.session_state.game_state == "game_over":
-    # 배경에 남은 최종 보드를 흐리게 보여주거나 상단 바만 유지한 채 팝업 표시
     st.balloons()
 
     # 결과 오버레이 팝업창
@@ -233,12 +235,12 @@ elif st.session_state.game_state == "game_over":
         unsafe_allow_html=True,
     )
 
-    # 팝업 내 단독 재시작 버튼 배치
+    # 팝업 내 독립된 재시작 버튼 배치
     st.markdown(
         "<div style='position: fixed; top: 52%; left: 50%; transform: translate(-50%, -52%); z-index: 10000; width: 300px;'>",
         unsafe_allow_html=True,
     )
-    if st.button("🔄 다시 하기", key="restart_btn", use_container_width=True):
+    if st.button("🔄 다시 하기", key=f"popup_restart_{st.session_state.game_id}", use_container_width=True):
         st.session_state.game_state = "ready"
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
