@@ -1,11 +1,11 @@
-import random
+]import random
 import time
 import streamlit as st
 
 # 페이지 설정 (wide 모드)
 st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="wide")
 
-# 초록색 배경과 오버레이 결과 창 스타일링
+# 초록색 배경 및 UI 스타일링
 st.markdown(
     """
     <style>
@@ -29,7 +29,7 @@ st.markdown(
         margin: 0px !important;
     }
 
-    /* 결과 팝업 내 텍스트 검은색 처리 */
+    /* 결과 팝업 내 텍스트 색상 처리 */
     .stAlert p, .stAlert span, div[data-testid="stMarkdownContainer"] p {
         color: #000000 !important;
     }
@@ -100,7 +100,7 @@ def start_game():
     st.session_state.start_time = time.time()
 
 
-# 1. 시작 화면 (Ready 상태일 때만 온전히 표시하고 종료)
+# 1. 시작 화면 (Ready 상태)
 if st.session_state.game_state == "ready":
     st.markdown("<div style='height: 120px;'></div>", unsafe_allow_html=True)
     st.markdown(
@@ -115,7 +115,7 @@ if st.session_state.game_state == "ready":
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-        if st.button("🚀 Start 게임 시작", use_container_width=True):
+        if st.button("🚀 Start 게임 시작", key="start_btn", use_container_width=True):
             start_game()
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -135,7 +135,7 @@ else:
     c2.metric("🏆 점수", f"{st.session_state.score}점")
     c3.metric("🍏 사과", f"{st.session_state.cleared_apples}개")
 
-    if c4.button("🔄 선택 취소", use_container_width=True):
+    if c4.button("🔄 선택 취소", key="cancel_btn", use_container_width=True):
         st.session_state.first_click = None
         st.rerun()
 
@@ -164,7 +164,6 @@ else:
                 else:
                     btn_label = f"🍎{val}"
 
-                # 게임이 끝났을 때는 사과 버튼 비활성화
                 is_disabled = st.session_state.game_state == "game_over"
                 if cols[c].button(
                     btn_label, key=f"apple_{r}_{c}", disabled=is_disabled
@@ -237,7 +236,7 @@ else:
                 "<div style='position: fixed; top: 52%; left: 50%; transform: translate(-50%, -52%); z-index: 10000; width: 300px;'>",
                 unsafe_allow_html=True,
             )
-            if st.button("🔄 다시 하기", use_container_width=True):
+            if st.button("🔄 다시 하기", key="restart_btn", use_container_width=True):
                 st.session_state.game_state = "ready"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
