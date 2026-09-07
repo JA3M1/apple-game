@@ -232,15 +232,23 @@ elif st.session_state.game_state == "game_over":
             score=st.session_state.score,
             apples=st.session_state.cleared_apples,
         ),
-        unsafe_allow_html=True,
+        unsafe_allow_unsafe_allow_html := True,
     )
 
-    # 팝업 내 독립된 재시작 버튼 배치
+    # 팝업 내 버튼들 배치 (다시 하기 & 처음으로)
     st.markdown(
         "<div style='position: fixed; top: 52%; left: 50%; transform: translate(-50%, -52%); z-index: 10000; width: 300px;'>",
         unsafe_allow_html=True,
     )
-    if st.button("🔄 다시 하기", key=f"popup_restart_{st.session_state.game_id}", use_container_width=True):
-        st.session_state.game_state = "ready"
-        st.rerun()
+    
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🔄 다시 하기", key=f"popup_restart_{st.session_state.game_id}", use_container_width=True):
+            start_game()
+            st.rerun()
+    with col_btn2:
+        if st.button("🏠 처음으로", key=f"popup_home_{st.session_state.game_id}", use_container_width=True):
+            st.session_state.game_state = "ready"
+            st.rerun()
+            
     st.markdown("</div>", unsafe_allow_html=True)
