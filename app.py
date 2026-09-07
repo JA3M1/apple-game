@@ -70,7 +70,7 @@ st.markdown(
 
 # 세션 상태 초기화
 if "game_state" not in st.session_state:
-    st.session_state.game_state = "ready"  # 'ready', 'playing', 'game_over'
+    st.session_state.game_state = "ready"
 if "score" not in st.session_state:
     st.session_state.score = 0
 if "cleared_apples" not in st.session_state:
@@ -100,7 +100,7 @@ def start_game():
     st.session_state.start_time = time.time()
 
 
-# 1. 시작 화면 (Ready 상태일 때만 온전히 표시)
+# 1. 시작 화면 (Ready 상태일 때만 온전히 표시하고 종료)
 if st.session_state.game_state == "ready":
     st.markdown("<div style='height: 120px;'></div>", unsafe_allow_html=True)
     st.markdown(
