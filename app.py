@@ -5,13 +5,13 @@ import streamlit as st
 # 페이지 설정 (wide 모드)
 st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="wide")
 
-# 배경을 초록색으로 유지하고, 시작 버튼과 타이틀 배치를 보기 좋게 조정한 CSS 스타일링
+# 흰색 네모 박스(버튼 배경/테두리)를 완전히 지우고, 사과 아이콘 자리에 검은색 숫자가 딱 겹치게 하는 CSS
 st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
         max-width: 100% !important;
@@ -29,23 +29,36 @@ st.markdown(
         margin: 0px !important;
     }
 
-    /* 시작 버튼 크기를 키우고 눈에 띄게 스타일링 */
+    /* 버튼의 흰색 네모 배경, 테두리, 그림자를 완전히 투명하게 제거 */
     div.stButton > button {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 15px !important;
+        font-weight: bold !important;
+        color: #000000 !important; /* 숫자를 검은색으로 고정 */
+        padding: 0px !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        width: 100% !important;
+    }
+    
+    /* 마우스 올렸을 때 살짝 초록빛이 감돌도록 설정 */
+    div.stButton > button:hover {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border: none !important;
+    }
+
+    /* 시작 버튼은 예외적으로 눈에 띄게 스타일링 */
+    div.stCol > div > div > div > button {
         background-color: #ffffff !important;
         border: 2px solid #1b5e20 !important;
         border-radius: 10px !important;
         font-size: 20px !important;
         font-weight: bold !important;
         color: #1b5e20 !important;
-        padding: 12px 24px !important;
         height: auto !important;
-        width: 100% !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-    
-    div.stButton > button:hover {
-        background-color: #c8e6c9 !important;
-        border-color: #000000 !important;
+        padding: 12px 24px !important;
     }
     </style>
 """,
@@ -84,21 +97,18 @@ def start_game():
     st.session_state.start_time = time.time()
 
 
-# 1. 시작 화면 (타이틀과 버튼을 아래로 내리기 위해 여백 추가)
+# 1. 시작 화면
 if st.session_state.game_state == "ready":
-    # 상단 공백을 주어 글씨와 버튼을 아래로 내림
     st.markdown("<div style='height: 120px;'></div>", unsafe_allow_html=True)
-
     st.markdown(
         "<h1 style='text-align: center; font-size: 48px; margin-bottom: 20px;'>🍎 사과 게임</h1>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p style='text-align: center; font-size: 18px; margin-bottom: 40px;'>사과를 두 개 클릭하여 네모 영역을 지정하고, 안의 숫자 합이 10이 되도록 만드세요!</p>",
+        "<p style='text-align: center; font-size: 18px; margin-bottom: 40px;'>사과를 두 개 클릭하여 영역을 지정하고, 네모 안의 숫자 합이 10이 되면 사과와 숫자가 사라집니다!</p>",
         unsafe_allow_html=True,
     )
 
-    # 버튼 폭을 조절하기 위한 중앙 컬럼 배치
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         if st.button("🚀 Start 게임 시작", use_container_width=True):
@@ -132,7 +142,7 @@ elif st.session_state.game_state == "playing":
     else:
         st.write("사과 영역의 시작점을 클릭하세요.")
 
-    # 16x16 보드 출력 (버튼 스타일 복구: 투명 버튼 배경에 이모지+숫자)
+    # 16x16 보드 출력 (투명 배경 + 사과 이모지 중앙에 검은색 숫자 결합)
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
@@ -141,15 +151,15 @@ elif st.session_state.game_state == "playing":
 
             if val == 0:
                 cols[c].markdown(
-                    "<div style='height: 32px;'></div>", unsafe_allow_html=True
+                    "<div style='height: 30px;'></div>", unsafe_allow_html=True
                 )
             else:
+                # 선택된 첫 번째 지점은 초록색 테두리 느낌, 나머지는 사과 아이콘 + 검은색 숫자
                 if is_first:
                     btn_label = f"🟩{val}"
                 else:
                     btn_label = f"🍎{val}"
 
-                # 버튼 기본 스타일을 위한 내부 CSS 적용 구조
                 if cols[c].button(btn_label, key=f"apple_{r}_{c}"):
                     if st.session_state.first_click is None:
                         st.session_state.first_click = (r, c)
@@ -174,7 +184,9 @@ elif st.session_state.game_state == "playing":
                             st.session_state.score += count * 100
                             st.session_state.cleared_apples += count
                             for tr, tc in target_coords:
-                                st.session_state.board[tr][tc] = 0
+                                st.session_state.board[tr][tc] = (
+                                    0  # 영역 안의 사과와 숫자 모두 제거 (공백 처리)
+                                )
                             st.success("🎉 합이 10입니다! 사과가 제거되었습니다.")
                         else:
                             st.error(
