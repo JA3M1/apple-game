@@ -5,7 +5,7 @@ import streamlit as st
 # 페이지 설정 (wide 모드)
 st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="wide")
 
-# 스크롤 없는 한 화면 배치를 위한 CSS 스타일링
+# 흰색 네모 배경을 완전히 없애고 사과 아이콘 위에 검은색 숫자가 딱 겹쳐 보이도록 하는 CSS
 st.markdown(
     """
     <style>
@@ -29,23 +29,24 @@ st.markdown(
         margin: 0px !important;
     }
 
-    /* 버튼 크기를 16x16 격자에 맞춰 압축하면서 사과 이모지와 숫자가 명확히 보이도록 설정 */
+    /* 버튼의 흰색 네모 배경과 테두리를 완전히 투명하게 제거 */
     div.stButton > button {
-        background-color: #ffffff !important;
-        border: 1px solid #c8e6c9 !important;
-        border-radius: 6px !important;
-        font-size: 13px !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 16px !important;
         font-weight: bold !important;
-        color: #b71c1c !important;
+        color: #000000 !important; /* 숫자를 검정색으로 설정 */
         padding: 0px !important;
         height: 32px !important;
         min-height: 32px !important;
         width: 100% !important;
     }
     
+    /* 마우스 올렸을 때 은은한 효과 */
     div.stButton > button:hover {
-        background-color: #ffcdd2 !important;
-        border-color: #d32f2f !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        border: none !important;
     }
     </style>
 """,
@@ -95,8 +96,10 @@ if st.session_state.game_state == "ready":
     st.markdown(
         "<div style='text-align: center; margin-top: 50px;'>", unsafe_allow_html=True
     )
-    st.write("사과 안에 적힌 숫자의 합이 **10**이 되도록 클릭하여 선택하세요.")
-    st.write("합이 10이 되면 사과가 사라집니다!")
+    st.write(
+        "사과 아이콘 자리에 적힌 **검은색 숫자들의 합이 10**이 되도록 클릭하세요."
+    )
+    st.write("합이 10이 되면 사과와 숫자가 함께 사라집니다!")
 
     if st.button("🚀 Start 게임 시작", use_container_width=True):
         start_game()
@@ -124,7 +127,7 @@ elif st.session_state.game_state == "playing":
 
     st.write("")
 
-    # 16x16 보드 출력 (사과 아이콘과 숫자가 상시 표시되도록 구성)
+    # 16x16 보드 출력 (네모 배경 없이 사과 아이콘 자리에 검은색 숫자가 위치)
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
@@ -136,7 +139,7 @@ elif st.session_state.game_state == "playing":
                     "<div style='height: 32px;'></div>", unsafe_allow_html=True
                 )
             else:
-                # 사과 아이콘과 숫자가 함께 표기되도록 설정 (선택되면 초록색 강조)
+                # 선택된 경우 초록색 배경/테두리 느낌의 이모지, 아닐 경우 사과 아이콘과 검은색 숫자 결합
                 if is_selected:
                     btn_label = f"🟩 {val}"
                 else:
