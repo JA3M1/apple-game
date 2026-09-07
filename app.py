@@ -2,38 +2,49 @@ import random
 import time
 import streamlit as st
 
-# 페이지 설정
+# 페이지 설정 (wide 모드 고정)
 st.set_page_config(page_title="16x16 사과 게임", page_icon="🍏", layout="wide")
 
-# 초록색 테마 및 버튼 스타일링 (테두리 제거 + 상하 정렬을 위한 pre-line 설정)
+# 스크롤을 없애고 화면에 딱 맞추기 위한 CSS + 사과 아이콘 스타일링
 st.markdown(
     """
     <style>
+    /* 상하좌우 여백을 줄여서 한 화면에 꽉 차게 배치 */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        max-width: 100% !important;
+    }
+    
     .stApp {
         background-color: #e8f5e9;
+        overflow: hidden !important; /* 스크롤 방지 */
     }
+    
     h1, h2, h3, p, label {
         color: #1b5e20 !important;
+        margin-bottom: 0px !important;
     }
     
-    /* 버튼의 테두리, 배경 제거 및 텍스트 상하 정렬 (줄바꿈 허용) */
+    /* 16x16 버튼 컴포넌트 크기 및 여백 극대화 압축 */
     div.stButton > button {
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        font-size: 15px !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        border: 1px solid #c8e6c9 !important;
+        border-radius: 4px !important;
+        font-size: 13px !important;
         font-weight: bold !important;
-        padding: 2px 0px !important;
-        margin: 0px !important;
-        line-height: 1.1 !important;
-        white-space: pre-line !important;
-        height: auto !important;
+        color: #b71c1c !important;
+        padding: 0px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        width: 100% !important;
     }
     
-    /* 마우스 호버 시 은은한 효과 */
     div.stButton > button:hover {
-        background-color: rgba(0, 0, 0, 0.05) !important;
-        border: none !important;
+        background-color: #a5d6a7 !important;
+        border-color: #2e7d32 !important;
     }
     </style>
 """,
@@ -96,14 +107,14 @@ def check_and_clear():
 
 
 # --- UI 레이아웃 ---
-st.title("🍏 16x16 초록빛 사과 게임")
+st.title("🍏 16x16 원페이지 초록빛 사과 게임")
 
 # 1. 시작 화면
 if st.session_state.game_state == "ready":
     st.markdown("### 🌲 게임 규칙")
-    st.write("1. **Start** 버튼을 누르면 사과 밭이 펼쳐집니다.")
+    st.write("1. **Start** 버튼을 누르면 스크롤 없는 한 화면에 사과 밭이 펼쳐집니다.")
     st.write(
-        "2. **숫자가 위에 있고 사과가 아래에 있는 형태**를 눌러 합이 10이 되도록 만드세요."
+        "2. 사과 아이콘이 있는 자리에 표시된 **숫자들의 합이 10**이 되도록 클릭하세요."
     )
     st.write("3. **[선택 완료]**를 누르면 사과와 숫자가 함께 사라집니다.")
 
@@ -120,43 +131,45 @@ elif st.session_state.game_state == "playing":
         st.session_state.game_state = "game_over"
         st.rerun()
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("⏱️ 남은 시간", f"{remaining_time}초")
-    col2.metric("🏆 현재 점수", f"{st.session_state.score}점")
-    col3.metric("🍏 수확한 사과", f"{st.session_state.cleared_apples}개")
+    # 상단 정보 및 컨트롤을 한 줄 컴팩트하게 배치
+    info_col1, info_col2, info_col3, btn_col1, btn_col2 = st.columns(
+        [1.5, 1.5, 1.5, 2, 2]
+    )
+    info_col1.metric("⏱️ 남은 시간", f"{remaining_time}초")
+    info_col2.metric("🏆 점수", f"{st.session_state.score}점")
+    info_col3.metric("🍏 사과", f"{st.session_state.cleared_apples}개")
 
-    st.write("---")
-
-    col_a, col_b = st.columns(2)
-    if col_a.button("✨ 선택 완료 (합산 확인)", use_container_width=True):
+    if btn_col1.button("✨ 선택 완료", use_container_width=True):
         if st.session_state.selected:
             check_and_clear()
             st.rerun()
         else:
             st.warning("선택된 사과가 없습니다.")
 
-    if col_b.button("🔄 선택 초기화", use_container_width=True):
+    if btn_col2.button("🔄 초기화", use_container_width=True):
         st.session_state.selected = []
         st.session_state.selected_coords = []
         st.rerun()
 
     st.write("")
 
-    # 16x16 보드 출력 (숫자 위, 사과 아래 형태)
+    # 16x16 컴팩트 보드 출력 (사과 아이콘과 숫자 매칭)
     for r in range(16):
-        cols = st.columns(16)
+        cols = st.columns(16, gap="small")
         for c in range(16):
             val = st.session_state.board[r][c]
             is_selected = (r, c) in st.session_state.selected_coords
 
             if val == 0:
-                cols[c].markdown("⠀")
+                cols[c].markdown(
+                    "<div style='height:28px;'></div>", unsafe_allow_html=True
+                )
             else:
-                # 숫자가 위에 오고 사과 아이콘이 아래에 오도록 줄바꿈 설정 (\n 사용)
+                # 사과 배경 위에 숫자가 오도록 라벨 구성
                 if is_selected:
-                    label = f"{val}\n🟩"  # 선택된 경우 초록 상자/이모지로 표시
+                    label = f"🟩{val}"
                 else:
-                    label = f"{val}\n🍎"  # 평소에는 숫자 위, 사과 아래
+                    label = f"🍎{val}"
 
                 if cols[c].button(label, key=f"btn_{r}_{c}"):
                     if (r, c) not in st.session_state.selected_coords:
