@@ -120,14 +120,14 @@ if st.session_state.game_state == "ready":
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-# 2. 플레이 화면 (Playing 또는 Game Over 상태)
-else:
-    # 시간 검사 및 게임 종료 상태 전환
+# 2. 플레이 중 상태 (Playing)
+elif st.session_state.game_state == "playing":
     elapsed_time = time.time() - st.session_state.start_time
     remaining_time = max(0, int(st.session_state.game_duration - elapsed_time))
 
-    if remaining_time == 0 and st.session_state.game_state == "playing":
+    if remaining_time == 0:
         st.session_state.game_state = "game_over"
+        st.rerun()
 
     # 상단 상태바
     c1, c2, c3, c4 = st.columns(4)
@@ -164,10 +164,7 @@ else:
                 else:
                     btn_label = f"🍎{val}"
 
-                is_disabled = st.session_state.game_state == "game_over"
-                if cols[c].button(
-                    btn_label, key=f"apple_{r}_{c}", disabled=is_disabled
-                ):
+                if cols[c].button(btn_label, key=f"apple_{r}_{c}"):
                     if st.session_state.first_click is None:
                         st.session_state.first_click = (r, c)
                     else:
@@ -201,47 +198,47 @@ else:
                         st.session_state.first_click = None
                     st.rerun()
 
-    # 시간이 다 되어 게임이 끝났을 경우에만 결과 창(팝업) 띄우기
-    if st.session_state.game_state == "game_over":
-        st.balloons()
-        with st.container():
-            st.markdown(
-                """
-                <div style="
-                    position: fixed;
-                    top: 30%;
-                    left: 50%;
-                    transform: translate(-50%, -30%);
-                    background-color: white;
-                    padding: 30px;
-                    border-radius: 15px;
-                    box-shadow: 0px 0px 20px rgba(0,0,0,0.5);
-                    z-index: 9999;
-                    text-align: center;
-                    width: 400px;
-                ">
-                    <h2 style="color: #1b5e20 !important; margin-bottom: 15px;">🌿 게임 종료!</h2>
-                    <p style="color: #000000 !important; font-size: 16px; margin-bottom: 10px;">최종 점수: <b>{score} 점</b></p>
-                    <p style="color: #000000 !important; font-size: 16px; margin-bottom: 20px;">수확한 사과 개수: <b>{apples} 개</b></p>
-                </div>
-            """.format(
-                    score=st.session_state.score,
-                    apples=st.session_state.cleared_apples,
-                ),
-                unsafe_allow_html=True,
-            )
+    time.sleep(1)
+    st.rerun()
 
-            # 팝업 내 재시작 버튼 배치
-            st.markdown(
-                "<div style='position: fixed; top: 52%; left: 50%; transform: translate(-50%, -52%); z-index: 10000; width: 300px;'>",
-                unsafe_allow_html=True,
-            )
-            if st.button("🔄 다시 하기", key="restart_btn", use_container_width=True):
-                st.session_state.game_state = "ready"
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+# 3. 게임 종료 상태 (Game Over 팝업)
+elif st.session_state.game_state == "game_over":
+    # 배경에 남은 최종 보드를 흐리게 보여주거나 상단 바만 유지한 채 팝업 표시
+    st.balloons()
 
-    # 진행 중일 때만 1초마다 타이머 갱신 리프레시 실행
-    if st.session_state.game_state == "playing":
-        time.sleep(1)
+    # 결과 오버레이 팝업창
+    st.markdown(
+        """
+        <div style="
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -30%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.5);
+            z-index: 9999;
+            text-align: center;
+            width: 400px;
+        ">
+            <h2 style="color: #1b5e20 !important; margin-bottom: 15px;">🌿 게임 종료!</h2>
+            <p style="color: #000000 !important; font-size: 16px; margin-bottom: 10px;">최종 점수: <b>{score} 점</b></p>
+            <p style="color: #000000 !important; font-size: 16px; margin-bottom: 20px;">수확한 사과 개수: <b>{apples} 개</b></p>
+        </div>
+    """.format(
+            score=st.session_state.score,
+            apples=st.session_state.cleared_apples,
+        ),
+        unsafe_allow_html=True,
+    )
+
+    # 팝업 내 단독 재시작 버튼 배치
+    st.markdown(
+        "<div style='position: fixed; top: 52%; left: 50%; transform: translate(-50%, -52%); z-index: 10000; width: 300px;'>",
+        unsafe_allow_html=True,
+    )
+    if st.button("🔄 다시 하기", key="restart_btn", use_container_width=True):
+        st.session_state.game_state = "ready"
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
