@@ -10,10 +10,10 @@ st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1.5rem !important;
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
         max-width: 100% !important;
         height: 100vh !important;
         overflow: hidden !important;
@@ -34,17 +34,17 @@ st.markdown(
         color: #000000 !important;
     }
 
-    /* 사과 버튼 스타일 (투명 배경에 큼직한 이모지와 검은색 숫자) */
+    /* 사과 버튼 스타일 (컴팩트하게 조정하여 하단 잘림 방지) */
     div.stButton > button {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 22px !important;
+        font-size: 18px !important;
         font-weight: bold !important;
         color: #000000 !important;
         padding: 0px !important;
-        height: 44px !important;
-        min-height: 44px !important;
+        height: 32px !important;
+        min-height: 32px !important;
         width: 100% !important;
     }
     
@@ -132,7 +132,7 @@ elif st.session_state.game_state == "playing":
         st.session_state.game_state = "game_over"
         st.rerun()
 
-    # 상단 상태바
+    # 상단 상태바 (컴팩트하게 배치)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("⏱️ 남은 시간", f"{remaining_time}초")
     c2.metric("🏆 점수", f"{st.session_state.score}점")
@@ -142,15 +142,9 @@ elif st.session_state.game_state == "playing":
         st.session_state.first_click = None
         st.rerun()
 
-    if st.session_state.first_click:
-        r_f, c_f = st.session_state.first_click
-        st.info(
-            f"📍 첫 번째 사과 선택됨 ({r_f+1}행, {c_f+1}열). 대각선 위치의 두 번째 사과를 클릭하여 영역을 지정하세요."
-        )
-    else:
-        st.write("사과 영역의 시작점을 클릭하세요.")
+    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
 
-    # 16x16 보드 출력 (game_id를 키에 포함하여 이전 세션 버튼 잔상 완벽 차단)
+    # 16x16 보드 출력 (안내 문구를 없애고 간격을 줄여 하단까지 잘림 없이 표시)
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
@@ -159,7 +153,7 @@ elif st.session_state.game_state == "playing":
 
             if val == 0:
                 cols[c].markdown(
-                    "<div style='height: 44px;'></div>", unsafe_allow_html=True
+                    "<div style='height: 32px;'></div>", unsafe_allow_html=True
                 )
             else:
                 if is_first:
@@ -192,11 +186,6 @@ elif st.session_state.game_state == "playing":
                             st.session_state.cleared_apples += count
                             for tr, tc in target_coords:
                                 st.session_state.board[tr][tc] = 0
-                            st.success("🎉 합이 10입니다! 사과가 제거되었습니다.")
-                        else:
-                            st.error(
-                                f"❌ 선택한 영역의 합이 {total_sum}입니다. (10이 되어야 합니다)"
-                            )
 
                         st.session_state.first_click = None
                     st.rerun()
@@ -232,7 +221,7 @@ elif st.session_state.game_state == "game_over":
             score=st.session_state.score,
             apples=st.session_state.cleared_apples,
         ),
-        unsafe_allow_unsafe_allow_html := True,
+        unsafe_allow_html=True,
     )
 
     # 팝업 내 버튼들 배치 (다시 하기 & 처음으로)
