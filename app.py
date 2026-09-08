@@ -5,7 +5,7 @@ import streamlit as st
 # 페이지 설정 (wide 모드)
 st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="wide")
 
-# 초록색 배경 및 UI 스타일링 (열 간격 및 행 간격을 0으로 밀착)
+# 초록색 배경 및 UI 스타일링 (여백과 간격을 완전히 없애 촘촘하게 배치)
 st.markdown(
     """
     <style>
@@ -29,30 +29,35 @@ st.markdown(
         margin: 0px !important;
     }
 
-    /* 열(Column) 사이의 기본 간격을 0으로 밀착 */
+    /* Streamlit 컬럼 간격 최소화 */
     div[data-testid="stHorizontalBlock"] {
-        gap: 1px !important;
-        margin-bottom: 1px !important;
+        gap: 0px !important;
+        margin: 0px !important;
+    }
+    
+    div[data-testid="column"] {
+        padding: 0px !important;
+        flex: 1 !important;
     }
 
-    /* 사과 버튼 컴팩트 스타일 (사과와 숫자가 한 몸처럼 붙어보이도록 최소 크기 설정) */
+    /* 사과 버튼: 테두리 없이 사과와 숫자가 꽉 차게 밀착 */
     div.stButton > button {
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 3px !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: none !important;
+        border-radius: 2px !important;
         box-shadow: none !important;
         font-size: 13px !important;
         font-weight: bold !important;
         color: #000000 !important;
         padding: 0px !important;
-        height: 25px !important;
-        min-height: 25px !important;
+        height: 24px !important;
+        min-height: 24px !important;
         width: 100% !important;
+        line-height: 24px !important;
     }
     
     div.stButton > button:hover {
-        background-color: rgba(255, 255, 255, 0.5) !important;
-        border: 1px solid #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.4) !important;
     }
 
     /* 시작/재시작 버튼 스타일 */
@@ -106,7 +111,7 @@ def start_game():
 
 
 # ==========================================
-# 1. 시작 화면 (Ready 상태) - 완전히 분리하여 잔상 차단
+# 1. 시작 화면 (Ready 상태)
 # ==========================================
 if st.session_state.game_state == "ready":
     st.markdown("<div style='height: 120px;'></div>", unsafe_allow_html=True)
@@ -122,7 +127,7 @@ if st.session_state.game_state == "ready":
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-        if st.button("🚀 Start 게임 시작", key="lobby_start_button_only", use_container_width=True):
+        if st.button("🚀 Start 게임 시작", key="unique_start_btn_v3", use_container_width=True):
             start_game()
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -150,7 +155,7 @@ elif st.session_state.game_state == "playing":
 
     st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-    # 16x16 보드 출력 (사과 아이콘과 숫자를 나란히 밀착 배치)
+    # 16x16 보드 출력 (서로 바짝 붙도록 촘촘하게 배치)
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
@@ -159,10 +164,9 @@ elif st.session_state.game_state == "playing":
 
             if val == 0:
                 cols[c].markdown(
-                    "<div style='height: 25px;'></div>", unsafe_allow_html=True
+                    "<div style='height: 24px;'></div>", unsafe_allow_html=True
                 )
             else:
-                # 사과 아이콘과 숫자를 조합하여 해당 자리에 배치
                 icon = "🟩" if is_first else "🍎"
                 btn_label = f"{icon}{val}"
 
