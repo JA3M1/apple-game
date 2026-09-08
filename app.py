@@ -5,13 +5,13 @@ import streamlit as st
 # 페이지 설정 (wide 모드)
 st.set_page_config(page_title="사과 게임", page_icon="🍎", layout="wide")
 
-# 초록색 배경 및 UI 스타일링
+# 초록색 배경 및 UI 스타일링 (컴팩트하게 조정하여 스크롤 방지)
 st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 0.3rem !important;
-        padding-bottom: 0.3rem !important;
+        padding-top: 0.2rem !important;
+        padding-bottom: 0.2rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
         max-width: 100% !important;
@@ -34,17 +34,17 @@ st.markdown(
         color: #000000 !important;
     }
 
-    /* 사과 버튼 스타일 (컴팩트하게 조정하여 하단 잘림 방지) */
+    /* 사과 버튼 스타일 (최대한 좁게 붙여서 한 화면에 표시) */
     div.stButton > button {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: bold !important;
         color: #000000 !important;
         padding: 0px !important;
-        height: 32px !important;
-        min-height: 32px !important;
+        height: 26px !important;
+        min-height: 26px !important;
         width: 100% !important;
     }
     
@@ -84,7 +84,7 @@ if "start_time" not in st.session_state:
 if "game_duration" not in st.session_state:
     st.session_state.game_duration = 60
 if "game_id" not in st.session_state:
-    st.session_state.game_id = 0  # 버튼 키 잔상 방지를 위한 고유 ID
+    st.session_state.game_id = 0  # 위젯 잔상 방지를 위한 고유 ID
 
 
 def init_board():
@@ -94,7 +94,7 @@ def init_board():
     st.session_state.score = 0
     st.session_state.cleared_apples = 0
     st.session_state.first_click = None
-    st.session_state.game_id += 1  # 게임 시작/재시작마다 키를 완전히 새로 갱신
+    st.session_state.game_id += 1  # 게임이 새로 시작될 때마다 키 번호를 올려 기존 버튼을 완전히 소멸시킴
 
 
 def start_game():
@@ -118,7 +118,8 @@ if st.session_state.game_state == "ready":
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         st.markdown('<div class="action-btn">', unsafe_allow_html=True)
-        if st.button("🚀 Start 게임 시작", key="main_start_btn", use_container_width=True):
+        # 로비 전용 고유 키 사용
+        if st.button("🚀 Start 게임 시작", key="unique_lobby_start_btn", use_container_width=True):
             start_game()
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -132,7 +133,7 @@ elif st.session_state.game_state == "playing":
         st.session_state.game_state = "game_over"
         st.rerun()
 
-    # 상단 상태바 (컴팩트하게 배치)
+    # 상단 상태바
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("⏱️ 남은 시간", f"{remaining_time}초")
     c2.metric("🏆 점수", f"{st.session_state.score}점")
@@ -142,9 +143,9 @@ elif st.session_state.game_state == "playing":
         st.session_state.first_click = None
         st.rerun()
 
-    st.markdown("<div style='height: 5px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
 
-    # 16x16 보드 출력 (안내 문구를 없애고 간격을 줄여 하단까지 잘림 없이 표시)
+    # 16x16 보드 출력 (간격을 바짝 붙여 한 화면에 출력)
     for r in range(16):
         cols = st.columns(16, gap="small")
         for c in range(16):
@@ -153,7 +154,7 @@ elif st.session_state.game_state == "playing":
 
             if val == 0:
                 cols[c].markdown(
-                    "<div style='height: 32px;'></div>", unsafe_allow_html=True
+                    "<div style='height: 26px;'></div>", unsafe_allow_html=True
                 )
             else:
                 if is_first:
@@ -161,6 +162,7 @@ elif st.session_state.game_state == "playing":
                 else:
                     btn_label = f"🍎{val}"
 
+                # game_id를 포함한 독립적인 키 부여로 잔상 차단
                 if cols[c].button(btn_label, key=f"apple_{st.session_state.game_id}_{r}_{c}"):
                     if st.session_state.first_click is None:
                         st.session_state.first_click = (r, c)
